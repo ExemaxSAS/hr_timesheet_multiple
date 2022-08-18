@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from odoo import models, fields, api
-
+import logging
+_logger = logging.getLogger(__name__)
 
 class HrEmployee(models.Model):
     _inherit = 'hr.employee'
@@ -33,7 +34,10 @@ class AccountAnalyticLine(models.Model):
         if any(field_name in values for field_name in ['unit_amount', 'employee_id', 'account_id']):
             for timesheet in sudo_self:
                 cost = timesheet.employee_id.timesheet_cost or 0.0
-                #cost = 10
+                if timesheet.employee_id.hr_timesheets:
+                    for hr_timesheet in timesheet.employee_id.hr_timesheets:
+                        if hr_timesheet.analytic_account.id == timesheet.account_id.id:
+                            cost = hr_timesheet.value
                 amount = -timesheet.unit_amount * cost
                 amount_converted = timesheet.employee_id.currency_id._convert(
                     amount, timesheet.account_id.currency_id or timesheet.currency_id, self.env.company, timesheet.date)
