@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from odoo import models, fields, api
+from datetime import date
 import logging
 _logger = logging.getLogger(__name__)
 
@@ -13,10 +14,11 @@ class HrEmployeeTimesheets(models.Model):
     _name = 'hr.employee.timesheets'
 
     res_id = fields.Many2one('hr.employee', 'Empleado')
-    analytic_account = fields.Many2one('account.analytic.account', 'Cuenta Analítica')
+    analytic_account = fields.Many2one('account.analytic.account', 'Cuenta Analítica', required=True)
     from_date = fields.Date('Desde')
     to_date = fields.Date('Hasta')
-    value = fields.Float('Valor Hora')
+    value = fields.Float('Valor Hora', required=True)
+    description = fields.Char('Observaciones')
 
 class AccountAnalyticLine(models.Model):
     _inherit = 'account.analytic.line'
@@ -37,7 +39,11 @@ class AccountAnalyticLine(models.Model):
                 if timesheet.employee_id.hr_timesheets:
                     for hr_timesheet in timesheet.employee_id.hr_timesheets:
                         if hr_timesheet.analytic_account.id == timesheet.account_id.id:
-                            cost = hr_timesheet.value
+                            if not hr_timesheet.from_date and not hr_timesheet.to_date:
+                                cost = hr_timesheet.value
+                            if hr_timesheet.from_date and hr_timesheet.to_date:
+                                if date.today() >= hr_timesheet.from_date and date.today() <= hr_timesheet.to_date:
+                                    cost = hr_timesheet.value
                 amount = -timesheet.unit_amount * cost
                 amount_converted = timesheet.employee_id.currency_id._convert(
                     amount, timesheet.account_id.currency_id or timesheet.currency_id, self.env.company, timesheet.date)

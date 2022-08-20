@@ -12,6 +12,7 @@
                     <field name="hr_timesheets">
                           <tree editable="bottom" create="1">
                             <field name="analytic_account" />
+                            <field name="description" />
                             <field name="from_date" />
                             <field name="to_date" />
                             <field name="value" />
